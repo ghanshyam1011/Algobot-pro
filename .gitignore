@@ -116,3 +116,41 @@ MANIFEST
 *.backup
 tmp/
 temp/
+
+# ── Angular frontend ──────────────────────────────────────────
+algobot-frontend/node_modules/
+algobot-frontend/dist/
+algobot-frontend/.angular/
+algobot-frontend/.env
+
+# ── Node / npm ────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.npm/
+
+# ── TypeScript build cache ────────────────────────────────────
+*.tsbuildinfo
+out-tsc/
+
+# ── Telegram bot ──────────────────────────────────────────────
+user_state.json
+
+# ── Redis / Celery ────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+dump.rdb
+
+# ── Coverage & test output ────────────────────────────────────
+.hypothesis/
+junit.xml
+test-output/
+
+# ── Secrets & keys ────────────────────────────────────────────
+*.pem
+*.key
+*.cert
+secrets.json
+credentials.json

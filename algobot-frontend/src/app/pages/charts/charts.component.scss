@@ -1,0 +1,10 @@
+:host { display: block; }
+
+/* Slider accent color */
+input[type="range"] {
+  height: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Remove sub-chart components — all rendering is now inline */

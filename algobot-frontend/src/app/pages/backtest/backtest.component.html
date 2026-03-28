@@ -1,0 +1,188 @@
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Backtest Performance</h1>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+    Walk-forward simulation on 20% test data the model never saw during training
+  </p>
+</div>
+
+<!-- Coin cards row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div *ngFor="let r of results()"
+    (click)="selectedCoin.set(r.coin.id)"
+    class="text-left rounded-xl border-2 p-4 transition-all duration-200 cursor-pointer"
+    [class.border-brand-500]="selectedCoin() === r.coin.id"
+    [class.bg-brand-50]="selectedCoin() === r.coin.id"
+    [class.dark:bg-brand-900]="selectedCoin() === r.coin.id"
+    [class.border-light-border]="selectedCoin() !== r.coin.id"
+    [class.dark:border-dark-border]="selectedCoin() !== r.coin.id"
+    [class.bg-light-card]="selectedCoin() !== r.coin.id"
+    [class.dark:bg-dark-card]="selectedCoin() !== r.coin.id">
+
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+        [style.background]="r.coin.color">
+        {{ r.coin.symbol }}
+      </div>
+      <span class="font-semibold text-slate-900 dark:text-white">{{ r.coin.name }}</span>
+    </div>
+
+    <div *ngIf="r.loading" class="space-y-2">
+      <div class="h-3 bg-slate-200 dark:bg-dark-border rounded animate-pulse"></div>
+      <div class="h-3 bg-slate-200 dark:bg-dark-border rounded animate-pulse w-3/4"></div>
+    </div>
+
+    <div *ngIf="!r.loading && r.error"
+      class="text-xs text-slate-500 dark:text-slate-400">
+      No backtest data.<br>
+      Run <code class="font-mono text-brand-600">python pipeline.py</code>
+    </div>
+
+    <div *ngIf="!r.loading && r.data as d" class="space-y-1.5">
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-500 dark:text-slate-400">Return</span>
+        <span class="font-semibold font-mono" [ngClass]="pnlColor(d.total_return_pct)">
+          {{ formatReturn(d.total_return_pct) }}
+        </span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-500 dark:text-slate-400">Win rate</span>
+        <span class="font-semibold font-mono">{{ d.win_rate_pct.toFixed(1) }}%</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-500 dark:text-slate-400">Sharpe</span>
+        <span class="font-semibold font-mono">{{ d.sharpe_ratio.toFixed(2) }}</span>
+      </div>
+      <div class="mt-3">
+        <span *ngIf="passesGate(d)"
+          class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full
+                 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+          Deployment ready
+        </span>
+        <span *ngIf="!passesGate(d)"
+          class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full
+                 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-400">
+          Needs improvement
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail panel -->
+<ng-container *ngIf="selectedResult() as r">
+
+  <div class="mb-4 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+      [style.background]="r.coin.color">{{ r.coin.symbol }}</div>
+    <h2 class="text-lg font-bold text-slate-900 dark:text-white">
+      {{ r.coin.name }} — Detailed Results
+    </h2>
+  </div>
+
+  <!-- Skeleton -->
+  <div *ngIf="r.loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div *ngFor="let i of [1,2,3,4,5,6]"
+      class="card h-24 animate-pulse bg-slate-100 dark:bg-dark-card"></div>
+  </div>
+
+  <!-- No data -->
+  <div *ngIf="!r.loading && !r.data"
+    class="card flex flex-col items-center justify-center py-16 gap-4">
+    <p class="font-semibold text-slate-600 dark:text-slate-300">No backtest data for {{ r.coin.name }}</p>
+    <p class="text-sm text-slate-500 dark:text-slate-400">
+      Run <code class="font-mono text-brand-600">python pipeline.py</code>
+    </p>
+  </div>
+
+  <!-- Metrics -->
+  <div *ngIf="!r.loading && r.data as d">
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div class="metric-card">
+        <span class="metric-label">Total return</span>
+        <span class="metric-value text-xl" [ngClass]="pnlColor(d.total_return_pct)">
+          {{ formatReturn(d.total_return_pct) }}
+        </span>
+        <span class="metric-sub">Target: &gt;10%</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Win rate</span>
+        <span class="metric-value text-xl" [ngClass]="metricColor(d.win_rate_pct, thresholds.win_rate)">
+          {{ d.win_rate_pct.toFixed(1) }}%
+        </span>
+        <span class="metric-sub">Target: &gt;52%</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Max drawdown</span>
+        <span class="metric-value text-xl" [ngClass]="drawdownColor(d.max_drawdown_pct)">
+          {{ d.max_drawdown_pct.toFixed(2) }}%
+        </span>
+        <span class="metric-sub">Target: &gt;-25%</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Sharpe ratio</span>
+        <span class="metric-value text-xl" [ngClass]="metricColor(d.sharpe_ratio, thresholds.sharpe)">
+          {{ d.sharpe_ratio.toFixed(3) }}
+        </span>
+        <span class="metric-sub">Target: &gt;0.8</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Profit factor</span>
+        <span class="metric-value text-xl" [ngClass]="metricColor(d.profit_factor, thresholds.profit_factor)">
+          {{ d.profit_factor.toFixed(2) }}
+        </span>
+        <span class="metric-sub">Target: &gt;1.2</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Total trades</span>
+        <span class="metric-value text-xl">{{ d.total_trades }}</span>
+        <span class="metric-sub">₹{{ d.final_capital | number:'1.0-0' }} final</span>
+      </div>
+    </div>
+
+    <!-- Gate checks -->
+    <div class="card mb-6">
+      <h3 class="font-semibold text-slate-900 dark:text-white mb-4">Deployment gate checks</h3>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div *ngFor="let check of getGateChecks(d)"
+          class="flex items-center gap-2 p-3 rounded-lg"
+          [class.bg-green-50]="check.pass" [class.dark:bg-green-900]="check.pass"
+          [class.bg-red-50]="!check.pass"  [class.dark:bg-red-900]="!check.pass">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            [class.text-green-500]="check.pass" [class.text-red-500]="!check.pass">
+            <path *ngIf="check.pass" stroke-linecap="round" stroke-linejoin="round"
+              stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            <path *ngIf="!check.pass" stroke-linecap="round" stroke-linejoin="round"
+              stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          <div>
+            <p class="text-xs font-semibold"
+              [class.text-green-700]="check.pass" [class.dark:text-green-400]="check.pass"
+              [class.text-red-700]="!check.pass"  [class.dark:text-red-400]="!check.pass">
+              {{ check.value }}
+            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ check.label }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capital growth bar -->
+    <div class="card">
+      <h3 class="font-semibold text-slate-900 dark:text-white mb-3">Capital growth</h3>
+      <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+        <span>Initial ₹{{ d.initial_capital | number:'1.0-0' }}</span>
+        <span>Final ₹{{ d.final_capital | number:'1.0-0' }}</span>
+      </div>
+      <div class="h-4 rounded-full bg-slate-200 dark:bg-dark-border overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-700"
+          [ngClass]="d.total_return_pct >= 0 ? 'bg-green-500' : 'bg-red-500'"
+          [style.width.%]="capitalBarWidth(d)">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</ng-container>

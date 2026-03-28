@@ -1,0 +1,117 @@
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Signal History</h1>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Complete log of every signal generated</p>
+</div>
+
+<!-- Summary row -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="metric-card"><span class="metric-label">BUY</span>
+    <span class="metric-value text-green-600 dark:text-green-400">{{ totalBuy }}</span></div>
+  <div class="metric-card"><span class="metric-label">SELL</span>
+    <span class="metric-value text-red-600 dark:text-red-400">{{ totalSell }}</span></div>
+  <div class="metric-card"><span class="metric-label">HOLD</span>
+    <span class="metric-value text-amber-600 dark:text-amber-400">{{ totalHold }}</span></div>
+  <div class="metric-card"><span class="metric-label">Avg confidence</span>
+    <span class="metric-value">{{ (avgConf * 100).toFixed(0) }}%</span></div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-5 flex flex-wrap gap-3 items-end">
+
+  <div class="flex flex-col gap-1">
+    <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Coin</label>
+    <select class="input w-36" [ngModel]="filterCoin()" (ngModelChange)="filterCoin.set($event)">
+      <option value="">All coins</option>
+      <option *ngFor="let c of coins" [value]="c.id">{{ c.symbol }}</option>
+    </select>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Signal</label>
+    <select class="input w-32" [ngModel]="filterSignal()" (ngModelChange)="filterSignal.set($event)">
+      <option value="">All</option>
+      <option value="BUY">BUY</option>
+      <option value="SELL">SELL</option>
+      <option value="HOLD">HOLD</option>
+    </select>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <label class="text-xs font-medium text-slate-500 dark:text-slate-400">
+      Min confidence: {{ (filterMinConf() * 100).toFixed(0) }}%
+    </label>
+    <input type="range" min="0" max="1" step="0.05" class="w-36"
+      [ngModel]="filterMinConf()" (ngModelChange)="filterMinConf.set(+$event)">
+  </div>
+
+  <div class="flex-1"></div>
+
+  <button (click)="exportCsv()" class="btn-secondary flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+    </svg>
+    Export CSV
+  </button>
+
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading()" class="flex justify-center py-16">
+  <div class="w-10 h-10 rounded-full border-2 border-brand-200 dark:border-brand-900 border-t-brand-600 animate-spin"></div>
+</div>
+
+<!-- Table -->
+<div *ngIf="!loading()" class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Coin</th>
+        <th>Signal</th>
+        <th>Confidence</th>
+        <th>Price</th>
+        <th>Target</th>
+        <th>Stop loss</th>
+        <th>RSI</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let sig of filtered()">
+        <td class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+          {{ formatDate(sig.timestamp) }}
+        </td>
+        <td>
+          <span class="font-mono font-semibold text-sm">
+            {{ sig.coin.replace('_', '/') }}
+          </span>
+        </td>
+        <td><app-signal-badge [signal]="sig.signal" size="sm"></app-signal-badge></td>
+        <td class="w-36">
+          <app-confidence-bar [confidence]="sig.confidence"></app-confidence-bar>
+        </td>
+        <td class="font-mono text-sm">₹{{ sig.price | number:'1.2-2' }}</td>
+        <td class="font-mono text-sm text-green-600 dark:text-green-400">
+          ₹{{ sig.target_price | number:'1.0-0' }}
+        </td>
+        <td class="font-mono text-sm text-red-600 dark:text-red-400">
+          ₹{{ sig.stop_loss_price | number:'1.0-0' }}
+        </td>
+        <td class="font-mono text-sm"
+          [class.text-red-500]="sig.rsi > 70"
+          [class.text-green-500]="sig.rsi < 30">
+          {{ sig.rsi | number:'1.1-1' }}
+        </td>
+      </tr>
+      <tr *ngIf="!filtered().length">
+        <td colspan="8" class="text-center py-10 text-slate-400 dark:text-slate-500">
+          No signals match the current filters.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-slate-400 dark:text-slate-500 mt-3 text-right">
+  Showing {{ filtered().length }} of {{ allSignals().length }} signals
+</p>

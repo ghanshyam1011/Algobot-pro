@@ -1,0 +1,89 @@
+<!-- Page header -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Live Trading Signals</h1>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+    ML model reads 37 technical features · signals refresh every hour
+  </p>
+</div>
+
+<!-- Error banner -->
+<div *ngIf="signalSvc.error$ | async as err"
+  class="mb-6 flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200
+         dark:border-red-800 rounded-xl px-4 py-3">
+  <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+  </svg>
+  <div>
+    <p class="text-sm font-semibold text-red-700 dark:text-red-400">API connection error</p>
+    <p class="text-xs text-red-600 dark:text-red-500 mt-0.5">{{ err }}</p>
+  </div>
+</div>
+
+<!-- Summary row -->
+<ng-container *ngIf="signalSvc.signals$ | async as signals">
+  <div *ngIf="(signals | keyvalue).length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+    <div class="metric-card">
+      <span class="metric-label">BUY signals</span>
+      <span class="metric-value text-green-600 dark:text-green-400">{{ summaryStats.buy }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">SELL signals</span>
+      <span class="metric-value text-red-600 dark:text-red-400">{{ summaryStats.sell }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">HOLD signals</span>
+      <span class="metric-value text-amber-600 dark:text-amber-400">{{ summaryStats.hold }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Avg confidence</span>
+      <span class="metric-value">{{ (summaryStats.avgConf * 100).toFixed(0) }}%</span>
+    </div>
+
+  </div>
+</ng-container>
+
+<!-- Loading state -->
+<ng-container *ngIf="signalSvc.loading$ | async">
+  <div *ngIf="!(signalSvc.signals$ | async | keyvalue)?.length"
+    class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div *ngFor="let c of [1,2,3,4]"
+      class="card h-48 animate-pulse bg-slate-100 dark:bg-dark-card">
+    </div>
+  </div>
+</ng-container>
+
+<!-- Signal cards grid -->
+<ng-container *ngIf="signalSvc.signals$ | async as signals">
+
+  <div *ngIf="(signals | keyvalue).length > 0"
+    class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <ng-container *ngFor="let coin of coins">
+      <app-signal-card
+        *ngIf="getSignal(signals, coin.id) as sig"
+        [signal]="sig"
+        [coin]="coin">
+      </app-signal-card>
+    </ng-container>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="(signals | keyvalue).length === 0 && !(signalSvc.loading$ | async)"
+    class="flex flex-col items-center justify-center py-20 gap-4">
+    <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-dark-card flex items-center justify-center">
+      <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <div class="text-center">
+      <p class="font-semibold text-slate-700 dark:text-slate-300">Waiting for first signals</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        The scheduler runs every hour automatically.<br>
+        Make sure <code class="font-mono text-brand-600">python main.py</code> is running.
+      </p>
+    </div>
+  </div>
+
+</ng-container>

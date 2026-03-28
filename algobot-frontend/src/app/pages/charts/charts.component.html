@@ -1,0 +1,314 @@
+<!-- Page header -->
+<div class="mb-5">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Price & Indicator Charts</h1>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+    Candlestick · RSI (14) · MACD · Volume — data from signal history
+  </p>
+</div>
+
+<!-- ── Filter bar ──────────────────────────────────────────────────────────── -->
+<div class="card mb-5 flex flex-wrap gap-4 items-end">
+
+  <!-- Coin selector -->
+  <div class="flex flex-col gap-1.5">
+    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+      Select coin
+    </label>
+    <div class="flex gap-2">
+      <button *ngFor="let coin of coins"
+        (click)="selectCoin(coin)"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-150"
+        [class.border-transparent]="selectedCoin().id !== coin.id"
+        [class.text-white]="selectedCoin().id === coin.id"
+        [class.border-slate-200]="selectedCoin().id !== coin.id"
+        [class.dark:border-dark-border]="selectedCoin().id !== coin.id"
+        [class.bg-slate-100]="selectedCoin().id !== coin.id"
+        [class.dark:bg-dark-hover]="selectedCoin().id !== coin.id"
+        [class.text-slate-600]="selectedCoin().id !== coin.id"
+        [class.dark:text-slate-400]="selectedCoin().id !== coin.id"
+        [style.background]="selectedCoin().id === coin.id ? coin.color : ''"
+        [style.border-color]="selectedCoin().id === coin.id ? coin.color : ''">
+        <span class="w-2 h-2 rounded-full"
+          [style.background]="selectedCoin().id === coin.id ? 'rgba(255,255,255,0.8)' : coin.color">
+        </span>
+        {{ coin.symbol }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Candle count slider -->
+  <div class="flex flex-col gap-1.5 flex-1 min-w-48">
+    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+      Candles to show: <span class="text-slate-900 dark:text-white font-bold">{{ candleCount() }}</span>
+    </label>
+    <input type="range" min="50" max="500" step="50"
+      class="w-full accent-brand-600"
+      [ngModel]="candleCount()"
+      (ngModelChange)="candleCount.set($event); onCandleCountChange()">
+    <div class="flex justify-between text-xs text-slate-400 dark:text-slate-500">
+      <span>50</span><span>100</span><span>200</span><span>300</span><span>400</span><span>500</span>
+    </div>
+  </div>
+
+  <!-- Overlay toggles -->
+  <div class="flex flex-col gap-1.5">
+    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+      Overlays
+    </label>
+    <div class="flex gap-2 flex-wrap">
+      <button (click)="toggleOverlay('ema9')"
+        class="px-2.5 py-1 rounded-md text-xs font-semibold border transition-all"
+        [class.bg-blue-500]="showEma9()" [class.text-white]="showEma9()" [class.border-blue-500]="showEma9()"
+        [class.bg-transparent]="!showEma9()" [class.text-blue-500]="!showEma9()" [class.border-blue-300]="!showEma9()">
+        EMA 9
+      </button>
+      <button (click)="toggleOverlay('ema21')"
+        class="px-2.5 py-1 rounded-md text-xs font-semibold border transition-all"
+        [class.bg-amber-500]="showEma21()" [class.text-white]="showEma21()" [class.border-amber-500]="showEma21()"
+        [class.bg-transparent]="!showEma21()" [class.text-amber-500]="!showEma21()" [class.border-amber-300]="!showEma21()">
+        EMA 21
+      </button>
+      <button (click)="toggleOverlay('ema50')"
+        class="px-2.5 py-1 rounded-md text-xs font-semibold border transition-all"
+        [class.bg-purple-500]="showEma50()" [class.text-white]="showEma50()" [class.border-purple-500]="showEma50()"
+        [class.bg-transparent]="!showEma50()" [class.text-purple-500]="!showEma50()" [class.border-purple-300]="!showEma50()">
+        EMA 50
+      </button>
+      <button (click)="toggleOverlay('bb')"
+        class="px-2.5 py-1 rounded-md text-xs font-semibold border transition-all"
+        [class.bg-slate-500]="showBB()" [class.text-white]="showBB()" [class.border-slate-500]="showBB()"
+        [class.bg-transparent]="!showBB()" [class.text-slate-500]="!showBB()" [class.border-slate-300]="!showBB()">
+        Bollinger
+      </button>
+    </div>
+  </div>
+
+  <!-- Refresh -->
+  <button (click)="loadData()" [disabled]="loading()"
+    class="btn-secondary flex items-center gap-2 h-9 self-end">
+    <svg class="w-4 h-4" [class.animate-spin]="loading()"
+      fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+    </svg>
+    Refresh
+  </button>
+
+</div>
+
+<!-- ── Stats bar ────────────────────────────────────────────────────────────── -->
+<div *ngIf="currentSignal() as sig" class="card mb-5">
+  <div class="flex flex-wrap gap-6 items-center">
+
+    <!-- Coin -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0"
+        [style.background]="selectedCoin().color">
+        {{ selectedCoin().symbol }}
+      </div>
+      <div>
+        <p class="font-bold text-slate-900 dark:text-white">{{ selectedCoin().name }} / USD</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ candleCount() }} hourly candles</p>
+      </div>
+    </div>
+
+    <div class="h-8 border-l border-light-border dark:border-dark-border hidden md:block"></div>
+
+    <!-- Signal -->
+    <div class="flex flex-col gap-1">
+      <span class="text-xs text-slate-500 dark:text-slate-400">Signal</span>
+      <app-signal-badge [signal]="sig.signal" size="md"></app-signal-badge>
+    </div>
+
+    <!-- Price -->
+    <div class="flex flex-col gap-1">
+      <span class="text-xs text-slate-500 dark:text-slate-400">Price</span>
+      <span class="font-bold font-mono text-slate-900 dark:text-white">
+        ₹{{ sig.price | number:'1.2-2' }}
+      </span>
+    </div>
+
+    <!-- 24h change -->
+    <div class="flex flex-col gap-1">
+      <span class="text-xs text-slate-500 dark:text-slate-400">24h change</span>
+      <span class="font-semibold font-mono text-sm"
+        [class.text-green-500]="priceChange >= 0"
+        [class.text-red-500]="priceChange < 0">
+        {{ priceChange >= 0 ? '+' : '' }}{{ priceChange.toFixed(2) }}%
+      </span>
+    </div>
+
+    <!-- RSI -->
+    <div class="flex flex-col gap-1">
+      <span class="text-xs text-slate-500 dark:text-slate-400">RSI (14)</span>
+      <span class="font-semibold font-mono text-sm" [ngClass]="rsiColor">
+        {{ sig.rsi | number:'1.1-1' }} — {{ rsiStatus }}
+      </span>
+    </div>
+
+    <!-- Volume ratio -->
+    <div class="flex flex-col gap-1">
+      <span class="text-xs text-slate-500 dark:text-slate-400">Volume ratio</span>
+      <span class="font-semibold font-mono text-sm"
+        [class.text-green-500]="sig.volume_ratio > 1.5"
+        [class.text-amber-500]="sig.volume_ratio <= 1.5">
+        {{ sig.volume_ratio | number:'1.2-2' }}×
+      </span>
+    </div>
+
+    <!-- Confidence -->
+    <div class="flex flex-col gap-1 flex-1 min-w-32">
+      <span class="text-xs text-slate-500 dark:text-slate-400">Confidence</span>
+      <app-confidence-bar [confidence]="sig.confidence"></app-confidence-bar>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Error ────────────────────────────────────────────────────────────────── -->
+<div *ngIf="error()"
+  class="card mb-5 flex items-center gap-3 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+  <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+  </svg>
+  <span class="text-sm text-red-700 dark:text-red-400">{{ error() }}</span>
+</div>
+
+<!-- ── Loading ──────────────────────────────────────────────────────────────── -->
+<div *ngIf="loading()" class="space-y-4">
+  <div *ngFor="let h of [340, 180, 160, 120]"
+    class="card animate-pulse" [style.height.px]="h">
+    <div class="h-full bg-slate-100 dark:bg-dark-hover rounded-lg"></div>
+  </div>
+</div>
+
+<!-- ── Charts stack ─────────────────────────────────────────────────────────── -->
+<div *ngIf="!loading()" class="flex flex-col gap-4">
+
+  <!-- Candlestick -->
+  <div class="chart-container">
+    <div class="chart-header">
+      <div>
+        <h3 class="font-semibold text-slate-900 dark:text-white">
+          {{ selectedCoin().name }}/USD — Price
+        </h3>
+        <div class="flex items-center gap-3 mt-1">
+          <span *ngIf="showEma9()"
+            class="flex items-center gap-1 text-xs text-blue-500">
+            <span class="w-3 h-0.5 bg-blue-500 inline-block"></span> EMA 9
+          </span>
+          <span *ngIf="showEma21()"
+            class="flex items-center gap-1 text-xs text-amber-500">
+            <span class="w-3 h-0.5 bg-amber-500 inline-block"></span> EMA 21
+          </span>
+          <span *ngIf="showEma50()"
+            class="flex items-center gap-1 text-xs text-purple-500">
+            <span class="w-3 h-0.5 bg-purple-500 inline-block"></span> EMA 50
+          </span>
+          <span *ngIf="showBB()"
+            class="flex items-center gap-1 text-xs text-slate-400">
+            <span class="w-3 h-0.5 bg-slate-400 inline-block border-dashed"></span> BB
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-dark-hover
+                     text-slate-500 dark:text-slate-400 font-mono">1H</span>
+        <span *ngIf="latestPoint" class="text-sm font-bold font-mono text-slate-900 dark:text-white">
+          ₹{{ latestPoint.close | number:'1.2-2' }}
+        </span>
+        <span *ngIf="latestPoint" class="text-xs font-semibold font-mono"
+          [class.text-green-500]="priceChange >= 0"
+          [class.text-red-500]="priceChange < 0">
+          {{ priceChange >= 0 ? '+' : '' }}{{ priceChange.toFixed(2) }}%
+        </span>
+      </div>
+    </div>
+    <div class="p-0">
+      <div #candleRef class="w-full" style="height: 340px;"></div>
+    </div>
+  </div>
+
+  <!-- RSI -->
+  <div class="chart-container">
+    <div class="chart-header">
+      <div>
+        <h3 class="font-semibold text-slate-900 dark:text-white">RSI (14)</h3>
+        <div class="flex gap-4 mt-1 text-xs">
+          <span class="text-red-500">— Overbought (70)</span>
+          <span class="text-green-500">— Oversold (30)</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span *ngIf="latestPoint" class="font-bold font-mono text-sm" [ngClass]="rsiColor">
+          RSI: {{ latestPoint.rsi | number:'1.1-1' }}
+        </span>
+        <span class="text-xs px-2 py-1 rounded-full font-semibold"
+          [ngClass]="rsiColor"
+          [class.bg-red-50]="rsiStatus === 'Overbought'"
+          [class.dark:bg-red-900]="rsiStatus === 'Overbought'"
+          [class.bg-green-50]="rsiStatus === 'Oversold'"
+          [class.dark:bg-green-900]="rsiStatus === 'Oversold'"
+          [class.bg-amber-50]="rsiStatus === 'Neutral'"
+          [class.dark:bg-amber-900]="rsiStatus === 'Neutral'">
+          {{ rsiStatus }}
+        </span>
+      </div>
+    </div>
+    <div #rsiRef class="w-full" style="height: 180px;"></div>
+  </div>
+
+  <!-- MACD -->
+  <div class="chart-container">
+    <div class="chart-header">
+      <div>
+        <h3 class="font-semibold text-slate-900 dark:text-white">MACD</h3>
+        <div class="flex gap-4 mt-1 text-xs">
+          <span class="flex items-center gap-1 text-indigo-500">
+            <span class="w-3 h-0.5 bg-indigo-500 inline-block"></span> MACD
+          </span>
+          <span class="flex items-center gap-1 text-amber-500">
+            <span class="w-3 h-0.5 bg-amber-500 inline-block"></span> Signal
+          </span>
+          <span class="flex items-center gap-1 text-slate-500">
+            <span class="w-3 h-3 bg-green-400 inline-block rounded-sm opacity-60"></span> Histogram
+          </span>
+        </div>
+      </div>
+      <span *ngIf="latestPoint" class="text-sm font-semibold font-mono"
+        [class.text-green-500]="latestPoint.macd_histogram >= 0"
+        [class.text-red-500]="latestPoint.macd_histogram < 0">
+        {{ latestPoint.macd_histogram >= 0 ? 'Bullish' : 'Bearish' }}
+        ({{ latestPoint.macd_histogram | number:'1.4-4' }})
+      </span>
+    </div>
+    <div #macdRef class="w-full" style="height: 160px;"></div>
+  </div>
+
+  <!-- Volume -->
+  <div class="chart-container">
+    <div class="chart-header">
+      <h3 class="font-semibold text-slate-900 dark:text-white">Volume</h3>
+      <span class="text-xs text-slate-500 dark:text-slate-400">Green = up candle · Red = down candle</span>
+    </div>
+    <div #volumeRef class="w-full" style="height: 120px;"></div>
+  </div>
+
+</div>
+
+<!-- Empty state -->
+<div *ngIf="!loading() && !chartData().length"
+  class="card flex flex-col items-center justify-center py-20 gap-4">
+  <svg class="w-16 h-16 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+      d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+  </svg>
+  <div class="text-center">
+    <p class="font-semibold text-slate-600 dark:text-slate-300">No chart data yet</p>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+      Chart data builds up from signal history.<br>
+      Keep <code class="font-mono text-brand-600">python main.py</code> running.
+    </p>
+  </div>
+</div>

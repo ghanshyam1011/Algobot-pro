@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────
+# AlgoBot Pro — Python Dependencies
+# Install all with: pip install -r requirements.txt
+# ─────────────────────────────────────────────────
+
+# ── Data & ML ─────────────────────────────────────
+datasets        # HuggingFace datasets loader
+pandas            # DataFrames and CSV handling
+numpy            # Numerical arrays
+scipy           # Z-score outlier detection
+
+# ── Technical Indicators ──────────────────────────
+ta               # RSI, MACD, Bollinger Bands, EMA, ATR, OBV
+
+# ── Machine Learning ──────────────────────────────
+xgboost           # Main classification model
+scikit-learn      # Scaler, metrics, cross-validation, class weights
+optuna            # Hyperparameter optimisation
+joblib            # Model serialisation (.pkl files)
+
+# ── Live Market Data ──────────────────────────────
+yfinance         # Yahoo Finance API for live OHLCV data
+
+# ── Web API ───────────────────────────────────────
+fastapi         # API server for signal endpoints
+uvicorn           # ASGI server to run FastAPI
+
+# ── Telegram Bot ──────────────────────────────────
+python-telegram-bot # Telegram bot SDK
+
+# ── Scheduling ────────────────────────────────────
+APScheduler      # Hourly job scheduler
+
+# ── Dashboard ─────────────────────────────────────
+streamlit         # Web dashboard UI
+plotly          # Interactive charts in Streamlit
+
+# ── Database ──────────────────────────────────────
+sqlalchemy      # ORM for PostgreSQL
+psycopg2-binary   # PostgreSQL driver
+redis            # Redis client for caching
+
+# ── Email ─────────────────────────────────────────
+# (smtplib is built-in to Python — no install needed)
+
+# ── Config & Utils ────────────────────────────────
+python-dotenv      # Load .env files for API keys
+loguru            # Better logging (optional upgrade from logging)

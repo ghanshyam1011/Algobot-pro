@@ -1,0 +1,1 @@
+# src/__init__.py — AlgoBot Pro source package

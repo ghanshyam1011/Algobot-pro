@@ -1,0 +1,118 @@
+# ═══════════════════════════════════════════════════════════
+# AlgoBot Pro — .gitignore
+# ═══════════════════════════════════════════════════════════
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# ── Virtual environments ──────────────────────────────────────
+myenv/
+venv/
+env/
+.env/
+.venv/
+ENV/
+
+# ── Environment variables (NEVER commit your secrets!) ────────
+.env
+.env.local
+.env.*.local
+*.env
+
+# ── Data files (too large for git) ───────────────────────────
+data/raw/*.csv
+data/raw/*.parquet
+data/processed/*.csv
+data/labels/*.csv
+data/live/*.csv
+data/signal_log.json
+
+# Keep the .gitkeep placeholder files
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/labels/.gitkeep
+!data/live/.gitkeep
+
+# ── Trained models (too large for git) ───────────────────────
+models/*.pkl
+models/*.joblib
+models/backtest_*.json
+models/trade_log_*.csv
+models/evaluation_*.json
+models/best_params_*.json
+
+# Keep the registry and feature names (small, useful to track)
+!models/registry.json
+!models/feature_names.json
+!models/.gitkeep
+
+# ── Logs ──────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── IDE / Editor files ────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.spyderproject.cfg
+.ropeproject
+
+# ── OS files ──────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Testing ───────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+nosetests.xml
+test-results/
+
+# ── Jupyter Notebooks ─────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Build / Distribution ──────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+MANIFEST
+.eggs/
+
+# ── Streamlit ─────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ── Docker ────────────────────────────────────────────────────
+.dockerignore
+
+# ── Database ──────────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+
+# ── Temporary files ───────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.backup
+tmp/
+temp/

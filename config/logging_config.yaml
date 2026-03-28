@@ -1,0 +1,139 @@
+# config/logging_config.yaml
+# ============================
+# Logging configuration for AlgoBot Pro.
+#
+# HOW TO USE:
+#   import logging
+#   import logging.config
+#   import yaml
+#
+#   with open("config/logging_config.yaml") as f:
+#       config = yaml.safe_load(f)
+#   logging.config.dictConfig(config)
+#
+# LOG FILES:
+#   logs/algobot.log      — all INFO+ logs (rotates daily, keeps 7 days)
+#   logs/errors.log       — ERROR+ only (rotates daily, keeps 30 days)
+#   Console               — INFO+ with colour formatting
+
+version: 1
+disable_existing_loggers: false
+
+# ── Formatters ────────────────────────────────────────────────
+formatters:
+
+  standard:
+    format: "%(asctime)s  %(levelname)-8s  %(name)s  %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  detailed:
+    format: "%(asctime)s  %(levelname)-8s  %(name)s  [%(filename)s:%(lineno)d]  %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  simple:
+    format: "%(asctime)s  %(levelname)s  %(message)s"
+    datefmt: "%H:%M:%S"
+
+# ── Handlers ──────────────────────────────────────────────────
+handlers:
+
+  # Console handler — shows INFO+ in terminal
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: simple
+    stream: ext://sys.stdout
+
+  # Main log file — rotates daily, keeps 7 days
+  file_main:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/algobot.log
+    when: midnight
+    interval: 1
+    backupCount: 7
+    encoding: utf8
+
+  # Error log — rotates daily, keeps 30 days
+  file_errors:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: ERROR
+    formatter: detailed
+    filename: logs/errors.log
+    when: midnight
+    interval: 1
+    backupCount: 30
+    encoding: utf8
+
+  # Signal log — dedicated file for every signal generated
+  file_signals:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/signals.log
+    when: midnight
+    interval: 1
+    backupCount: 90    # Keep 90 days of signal history
+    encoding: utf8
+
+# ── Loggers ───────────────────────────────────────────────────
+loggers:
+
+  # Data pipeline loggers
+  src.data_pipeline:
+    level: INFO
+    handlers: [console, file_main]
+    propagate: false
+
+  # Feature engineering loggers
+  src.features:
+    level: INFO
+    handlers: [console, file_main]
+    propagate: false
+
+  # Model loggers
+  src.models:
+    level: INFO
+    handlers: [console, file_main]
+    propagate: false
+
+  # Signal loggers — also write to dedicated signal log
+  src.signals:
+    level: INFO
+    handlers: [console, file_main, file_signals]
+    propagate: false
+
+  # Delivery loggers
+  src.delivery:
+    level: INFO
+    handlers: [console, file_main]
+    propagate: false
+
+  # Scheduler logger
+  src.scheduler:
+    level: INFO
+    handlers: [console, file_main]
+    propagate: false
+
+  # APScheduler (suppress its verbose output)
+  apscheduler:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+  # Uvicorn (suppress its verbose access logs)
+  uvicorn:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+  uvicorn.access:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+# ── Root logger ───────────────────────────────────────────────
+root:
+  level: INFO
+  handlers: [console, file_main, file_errors]

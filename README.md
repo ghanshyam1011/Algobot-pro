@@ -2,7 +2,7 @@
 
 ---
 
-# AlgoBot Pro — Complete Project Explanation
+# AlgoBot Pro — AI Crypto Trading Signal Engine
 
 ---
 
